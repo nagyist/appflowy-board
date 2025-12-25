@@ -163,11 +163,36 @@ class _AppFlowyBoardGroupState extends State<AppFlowyBoardGroup> {
       ),
     );
 
+    final isEmptyGroup = widget.dataSource.groupData.items.isEmpty;
+    Widget bodyChild = paddingWidget;
+    if (isEmptyGroup) {
+      bodyChild = DragTarget<FlexDragTargetData>(
+        onWillAcceptWithDetails: (details) {
+          if (!widget.dataSource.acceptedGroupIds
+              .contains(details.data.reorderFlexId)) {
+            return false;
+          }
+          if (details.data.reorderFlexId == widget.groupId) {
+            return false;
+          }
+          widget.phantomController.dragTargetDidMoveToReorderFlex(
+            widget.groupId,
+            details.data,
+            0,
+          );
+          widget.reorderFlexAction?.resetDragTargetIndex(0);
+          return true;
+        },
+        onLeave: (_) => widget.phantomController.cancel(),
+        builder: (context, _, __) => paddingWidget,
+      );
+    }
+
     final reorderWidget = widget.shrinkWrap
-        ? paddingWidget
+        ? bodyChild
         : Flexible(
             fit: widget.stretchGroupHeight ? FlexFit.tight : FlexFit.loose,
-            child: paddingWidget,
+            child: bodyChild,
           );
 
     final childrenWidgets = [
